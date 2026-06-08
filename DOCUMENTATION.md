@@ -381,3 +381,16 @@ require github.com/QguAr71/sysq-libs v0.1.0
 require github.com/casbin/casbin/v2 v2.x // tylko jeśli używasz acl
 require go.etcd.io/bbolt v1.x            // tylko jeśli używasz store
 ```
+
+---
+
+## Polityka licencyjna (obowiązuje od 2026-06-08)
+
+1. **Zawsze sprawdzaj licencję** — przed każdą integracją zewnętrznego kodu, koncepcji lub algorytmu. Brak licencji = tylko koncept, nie kod.
+2. **Koncepcje tak, kod nie** — własna implementacja w Go/Rust, zero kopiowania fragmentów z cudzych repo.
+3. **Apache 2.0 → BSD 3-Clause** — Apache wymaga NOTICE przy kopiowaniu kodu, nie przy niezależnej implementacji idei. BSD 3-Clause to nasz standard dla wszystkich bibliotek sysq.
+4. **Teorie i algorytmy z domeny publicznej** (Ebbinghaus 1885, FSRS MIT) — wolne do wykorzystania bez ograniczeń.
+5. **Przed integracją: audit licencji** — każdy nowy plik/import sprawdzony pod kątem kompatybilności z BSD 3-Clause.
+6. **GPL/AGPL — zabronione** — sysq-libs nigdy nie będzie zawierać kodu z licencją wirusową.
+
+Zobacz: [BLUEPRINT_NEUROADAPTIVE.md](https://github.com/QguAr71/chambers/blob/main/BLUEPRINT_NEUROADAPTIVE.md) — szczegółowy audit licencji zewnętrznych forków.
