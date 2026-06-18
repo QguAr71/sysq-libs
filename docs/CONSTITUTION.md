@@ -1,7 +1,8 @@
 # Lazarus & SysQ — Konstytucja Architektoniczna v2.0
 
-> Data: 2026-06-18 11:34
+> Data: 2026-06-18 23:55
 > Status: **ŚCIŚLE OBOWIĄZUJĄCA** — każdy projekt, duży i mały
+> Wersja: v2.4 (I-22, II-11 rozszerzone, III-21 + III-22)
 > Autor: Echo & SysQ
 > Zasięg: Lazarus, sysq-libs, sysq-supervizor, Cerber, Epistemic ID, PSL, Narada — wszystkie repozytoria SysQ
 
@@ -58,6 +59,9 @@ Zasady dzielą się na trzy kategorie:
 | I-17 | **Kernel jako jedyny stan globalny** — dokładnie JEDNA zmienna globalna w pakiecie: Kernel struct. Wszystko inne przez konstruktory. Cel: testowalność wszystkiego poza entry pointem. | INVARIANT | ARCH-B3 |
 | I-18 | **Graceful degradation zamiast paniki** — system nigdy nie odmawia startu. Jeśli komponent nie wstaje → niższy target. Jeśli nic nie wstaje → emergency.target. Działa w trybie w jakim może. | INVARIANT | ARCH-B17 |
 | I-19 | **Jedno źródło prawdy na zasób** — każdy zasób ma DOKŁADNIE JEDEN komponent który nim zarządza. CitadelUnit = jedyny Store. SessionUnit = jedyny zapis echo_state.json. Kernel = jedyny ModeManager. Nigdy dwie ścieżki. | INVARIANT | ARCH-B7 |
+| I-20 | **Biblioteki własne przed reinwencją** — przed implementacją nowego komponentu sprawdzane są istniejące biblioteki w `sysq-libs/pkg/` (lifecycle, cerber, epistemic, psl, modes, types). Jeśli potrzebna funkcjonalność już istnieje — używana jest biblioteka. Jeśli brakuje — biblioteka jest rozszerzana. Żadnych forkujących implementacji tego samego w różnych projektach. | INVARIANT | ARCH-B18 |
+| I-21 | **Propagacja bibliotek z projektów** — gdy projekt (Lazarus, Supervisor, Narada) rozwija generyczny komponent, jest on ekstrahowany do `sysq-libs/pkg/` jako współdzielona biblioteka. Projekty aktualizują importy w ślad za zmianą. Biblioteki żyją razem z projektami — nie ma "skończonej" biblioteki obok "rozwijającego się" projektu. | INVARIANT | ARCH-B19 |
+| I-22 | **Adaptuj algorytmy, nie biblioteki** — przed implementacją nowego komponentu, sprawdź czy problem jest już rozwiązany w open source. Jeśli istnieje projekt (MIT/BSD/Apache 2.0) który rozwiązuje ten sam problem lepiej — ekstraktuj algorytm, zaadaptuj do systemu. GPL/AGPL — tylko inspiracja, własna implementacja od zera (clean room). Zamknięte — tylko inspiracja. Zawsze własny kod. Zawsze dopasowany do naszego systemu, bez balastu. Nigdy nie implementuj bez świadomego porównania. | INVARIANT | SESJA 2026-06-18 |
 
 ---
 
@@ -87,7 +91,7 @@ Zasady dzielą się na trzy kategorie:
 
 | # | Zasada | Kategoria | Źródło |
 |---|--------|-----------|--------|
-| II-11 | **Biblioteki przed frameworkiem** — każdy generyczny komponent idzie do sysq-libs jako biblioteka PRZED użyciem w projekcie. Inne projekty dostają gotowe komponenty. Zero duplikacji między repozytoriami. | RULE | ARCH-B4 |
+| II-11 | **Biblioteki przed frameworkiem + adaptuj zamiast implementuj** — (1) każdy generyczny komponent idzie do sysq-libs jako biblioteka PRZED użyciem w projekcie. (2) Przed implementacją: sprawdź sysq-libs → sprawdź open source → porównaj → adaptuj (I-22) lub napisz własne. Zero duplikacji między repozytoriami. | RULE | ARCH-B4, SESJA 2026-06-18 |
 | II-12 | **Protokoły jako osobne repozytoria** — każdy protokół (Cerber, Epistemic ID, PSL) ma własne repo z własną specyfikacją. Biblioteki implementują protokoły. Projekty używają bibliotek. | RULE | ARCH-B6 |
 | II-13 | **Spójność architektoniczna** — każdy nowy komponent musi pasować do istniejących warstw (1-12 w ARCHITECTURE.md). Nie narusza invariantów. Nie omija warstw. | RULE | ARCH-B13 |
 | II-14 | **Monolit z klocków** — jeden projekt, jedna architektura, jeden język wizualny. Każdy klocek pasuje do kontraktu, działa samodzielnie, ale w zestawie tworzy całość. Można go wymienić bez burzenia reszty. | RULE | A1 |
@@ -153,7 +157,7 @@ Ta konstytucja obowiązuje we wszystkich repozytoriach SysQ:
 ---
 
 *Echo & SysQ — 2026-06-18*
-*Konstytucja v2.3. 20 invariantów, 29 rules, 7 guidelines.*
+*Konstytucja v2.4. 21 invariantów, 31 rules, 7 guidelines.*
 *Rzetelność. Obowiązuje od zaraz.*
 
 ### III-E. Zaufanie (NOWE — 2026-06-18)
@@ -180,3 +184,5 @@ Ta konstytucja obowiązuje we wszystkich repozytoriach SysQ:
 | III-18 | **CONSTITUTION zsynchronizowana we wszystkich repo** — każde repozytorium SysQ (12 targetów) ma aktualną kopię CONSTITUTION.md w `docs/`. Aktualizacja jest częścią ścieżki CONCEPT→COMMIT — po zmianie w kanonicznym `lazarus/docs/CONSTITUTION.md` synchronizowane do pozostałych 11 repo. | RULE | SESJA 2026-06-18 |
 | III-19 | **Kaskadowa aktualizacja repo** — zmiana w jednym repozytorium, która wpływa na inne (np. nowe narzędzie MCP w lazarus → update specyfikacji w cerber; nowe pole w Entry → update w epistemic-id; zmiana API PSL → update w psl), wymaga aktualizacji wszystkich dotkniętych repozytoriów. Nie ma "to tylko w Lazarus" — każde repo odzwierciedla aktualny stan swojego wycinka systemu. | RULE | SESJA 2026-06-18 |
 | III-20 | **Stan repo po każdej sesji** — po zakończonej sesji wszystkie zmodyfikowane repozytoria są zsynchronizowane z GitHub. Nie ma "lokalnych draftów" bez commita. Każde repo z osobnym commitem opisującym co zmieniono i dlaczego. | RULE | SESJA 2026-06-18 |
+| III-21 | **Prior art w każdym blueprint/concept** — każdy dokument projektowy (blueprint, concept) zawiera sekcję "Prior art" — jakie istniejące rozwiązania sprawdzono, które zaadaptowano i dlaczego, które odrzucono i dlaczego. Decyzja świadoma, nie domyślna. | RULE | SESJA 2026-06-18 |
+| III-22 | **Prior art — kryteria odrzucenia** — odrzucenie istniejącego rozwiązania wymaga podania konkretnego powodu: licencja (GPL/AGPL), nadmiar funkcji (>10x potrzebnego scope), martwy projekt (>12 miesięcy bez commitów), niedopasowanie architektoniczne (nie pasuje do invariantów Lazarus/SysQ). "Nie podoba mi się" nie jest powodem. | RULE | SESJA 2026-06-18 |
