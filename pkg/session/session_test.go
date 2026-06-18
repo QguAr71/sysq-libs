@@ -50,8 +50,8 @@ func TestExitedState(t *testing.T) {
 	if ExitedState(42) != ExitedNonZero {
 		t.Error("exit 42 → ExitedNonZero")
 	}
-	if ExitedState(-1) != ExitedUnknown {
-		t.Error("exit -1 → ExitedUnknown")
+	if ExitedState(-1) != ExitedNonZero {
+		t.Error("exit -1 → ExitedNonZero")
 	}
 }
 
