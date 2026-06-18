@@ -85,6 +85,77 @@ Każdy protokół ma publiczną specyfikację. Biblioteka jest implementacją re
 
 ---
 
+---
+
+## Zastosowania per biblioteka
+
+### lifecycle/ — Unit System
+
+| # | Zastosowanie | Opis |
+|---|-------------|------|
+| 1 | Systemy z graceful degradation | Każdy komponent to Unit z własnym Start/Stop — awaria jednego nie zabija systemu |
+| 2 | Mikroserwisy embedded | W jednym procesie, wiele niezależnych komponentów z watchdogiem |
+| 3 | IoT / Edge computing | Jednoprocesowe systemy gdzie kontenery to za dużo, a procesy za mało |
+| 4 | Plugin architecture | Aplikacje z hot-plug modulemi — każdy plugin to Unit |
+| 5 | Game engine subsystemy | Renderer, audio, fizyka — każdy jako Unit, zależności jawne |
+| 6 | Monitoring / observability | Watchdog 30s, health report, kontrola zależności |
+
+### modes/ — Operational Mode FSM
+
+| # | Zastosowanie | Opis |
+|---|-------------|------|
+| 1 | Każdy długo-żyjący daemon | INIT→GUARDED→ACTIVE jako standardowa progresja boot |
+| 2 | Systemy odporne na awarie | DEGRADED → RECOVERY → ACTIVE zamiast panic+restart |
+| 3 | Serwisy z maintenance window | MAINTENANCE — cisza, bez alarmów, bez heartbeat |
+| 4 | Read-only fallback | EMERGENCY — system działa w trybie tylko-do-odczytu |
+| 5 | CI/CD pipeline | Każdy stage pipeline'u to tryb — init, build, test, deploy, rollback |
+| 6 | Home Lab / Self-hosted | Serwer który sam diagnostykuje i przechodzi w bezpieczny tryb |
+
+### vault/ — Encrypted Storage + Honeypot + Mirror
+
+| # | Zastosowanie | Opis |
+|---|-------------|------|
+| 1 | Sejf na klucze API / tokeny | Każdy projekt potrzebuje bezpiecznie przechowywać sekrety |
+| 2 | Detekcja włamań | Honeypoty — dostęp do "finance" triggeruje alert |
+| 3 | Ciche odrzucanie nieautoryzowanego dostępu | Mirror — odpowiedź nieodróżnialna od braku danych |
+| 4 | Multi-tenant security | Każdy tenant ma swój vault, klucze nigdy nie mieszają się |
+| 5 | Compliance: dane wrażliwe | Szyfrowanie na poziomie wpisu — audytor widzi że dane są chronione |
+| 6 | Zero-knowledge storage | Hosting nie widzi kluczy — tylko klient ma master key |
+
+### session/ — Lifecycle FSM + Journal
+
+| # | Zastosowanie | Opis |
+|---|-------------|------|
+| 1 | Dowolny daemon śledzący procesy klienckie | Lazarus śledzi goose — supervisor może śledzić agentów |
+| 2 | Append-only audit log | Journal — każda zmiana stanu nagrana, replay przy restarcie |
+| 3 | Crash recovery | Niezaplikowane zdarzenia replay'owane po restarcie |
+| 4 | Systemy agentowe | Śledzenie życia wielu agentów w jednym procesie |
+| 5 | CI/CD worker tracking | Który worker się wysypał, dlaczego, kiedy |
+| 6 | Session continuity | Nowa sesja wie gdzie skończyła poprzednia |
+
+### desiredstate/ — Desired State Engine
+
+| # | Zastosowanie | Opis |
+|---|-------------|------|
+| 1 | Self-healing systems | Deklarujesz stan pożądany, Reconciler go utrzymuje |
+| 2 | Kubernetes- style control loop (bez K8s) | Observe → Compare → Fix w jednym procesie |
+| 3 | Configuration drift detection | Plik konfiguracyjny się zmienił? Reconciler alarmuje |
+| 4 | Infrastructure as Code (lightweight) | Deklaratywny stan dla lokalnych usług |
+| 5 | Compliance monitoring | Regulator wymaga stanu X — Reconciler pilnuje |
+| 6 | Home automation | "Termostat ma być 21°C" — Reconciler sprawdza i koryguje |
+
+### types/ — Epistemic Types
+
+| # | Zastosowanie | Opis |
+|---|-------------|------|
+| 1 | Oznaczanie pochodzenia danych w dowolnym systemie | self/imported/derived/external/unknown |
+| 2 | AI output labeling | Czy ten tekst napisał człowiek czy model? |
+| 3 | Data lineage | Skąd przyszła ta informacja? Ścieżka pochodzenia |
+| 4 | Confidence scoring | High/Medium/Low — uniwersalna skala pewności |
+| 5 | Knowledge graph metadata | Każdy węzeł ma origin + epistemic + confidence |
+
+---
+
 ## Zastosowania platformowe
 
 ### Lazarus jako OS dla tożsamości agentów AI
