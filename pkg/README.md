@@ -13,8 +13,11 @@ Jeśli nie ma, a komponent jest generyczny — zaimplementuj tutaj i zaimportuj.
 | `cerber/` | CerberGate — walidacja dostępu | Lazarus |
 | `epistemic/` | EntryID, EventID — identyfikatory epistemiczne | Lazarus (citadel) |
 | `psl/` | Personalized Search Layer — re-ranking wyników FTS5 | Lazarus (embbridge) |
-| `modes/` | Maszyna stanów trybów operacyjnych | Lazarus |
+| `modes/` | Maszyna stanów trybów operacyjnych (8 trybów, 184 LOC) | Lazarus |
 | `types/` | Typy epistemiczne (Origin, Epistemic) | Lazarus (citadel) |
+| `vault/` | ChaCha20-Poly1305 AEAD + honeypoty + mirror (304 LOC) | Lazarus |
+| `session/` | Lifecycle FSM + append-only journal + registry (470 LOC) | Lazarus (kernel_deploy) |
+| `desiredstate/` | Desired State engine + observer + reconciler (595 LOC) | Lazarus (kernel_deploy) |
 
 ## Invarianty
 
@@ -30,4 +33,5 @@ Zgodnie z konstytucją (`CONSTITUTION.md #I-20, #I-21`):
 2. Plik `<nazwa>.go` + `<nazwa>_test.go`
 3. Zero zależności od Lazarusa — tylko stdlib + zewnętrzne moduły
 4. Interfejs jawny, invarianty w komentarzu
-5. Aktualizuj ten README
+5. Dokumentacja DEV + USER w `lazarus/docs/DEV/<nazwa>.md` i `lazarus/docs/USER/<nazwa>.md`
+6. Aktualizuj ten README

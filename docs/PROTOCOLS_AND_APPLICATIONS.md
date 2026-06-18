@@ -17,6 +17,8 @@
 | `psl/` | `sysq-libs/pkg/psl` | 337 | Personalized Search Layer — epistemic re-ranking |
 | `modes/` | `sysq-libs/pkg/modes` | 184 | Maszyna stanów — 8 trybów operacyjnych |
 | `vault/` | `sysq-libs/pkg/vault` | 304 | Szyfrowanie AEAD + honeypoty + mirror |
+| `session/` | `sysq-libs/pkg/session` | 470 | Lifecycle FSM + append-only journal + registry |
+| `desiredstate/` | `sysq-libs/pkg/desiredstate` | 595 | Desired State engine + observer + reconciler |
 
 ---
 
