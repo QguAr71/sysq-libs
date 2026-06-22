@@ -17,8 +17,9 @@ import (
 // Suitable for Lazarus MVP. Supervisor uses this for tests,
 // then swaps to NATSBus in production.
 type InMemoryBus struct {
-	mu   sync.RWMutex
-	subs []subscription
+	mu       sync.RWMutex
+	subs     []subscription
+	retained map[string]bus.Message // per-topic retained messages
 }
 
 type subscription struct {
@@ -29,7 +30,9 @@ type subscription struct {
 
 // New creates a ready-to-use InMemoryBus.
 func New() *InMemoryBus {
-	return &InMemoryBus{}
+	return &InMemoryBus{
+		retained: make(map[string]bus.Message),
+	}
 }
 
 // Publish sends a message synchronously to all matching subscribers.
@@ -84,8 +87,41 @@ func (b *InMemoryBus) Subscribe(ctx context.Context, topic string, handler func(
 	s := subscription{topic: topic, handler: handler}
 	b.mu.Lock()
 	b.subs = append(b.subs, s)
+	idx := len(b.subs) - 1
+	// Check for retained message — deliver immediately
+	if msg, ok := b.retained[topic]; ok {
+		msg := msg // capture
+		go handler(msg)
+	}
 	b.mu.Unlock()
-	return &subHandle{b: b, s: &b.subs[len(b.subs)-1]}, nil
+	return &subHandle{b: b, s: &b.subs[idx]}, nil
+}
+
+// RetainLast stores the last message for a topic.
+// Passing nil clears the retained message.
+func (b *InMemoryBus) RetainLast(topic string, msg *bus.Message) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if msg == nil {
+		delete(b.retained, topic)
+		return
+	}
+	if b.retained == nil {
+		b.retained = make(map[string]bus.Message)
+	}
+	b.retained[topic] = *msg
+}
+
+// RetainedTopics returns a snapshot of all retained topics and their messages.
+// Used by BusBridge to match wildcard subscriptions against retained events.
+func (b *InMemoryBus) RetainedTopics() map[string]bus.Message {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+	out := make(map[string]bus.Message, len(b.retained))
+	for k, v := range b.retained {
+		out[k] = v
+	}
+	return out
 }
 
 // Request is NOT supported by InMemoryBus. Returns an error.

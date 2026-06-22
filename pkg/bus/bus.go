@@ -89,6 +89,12 @@ type Bus interface {
 	// Not all backends support this (InMemoryBus does not).
 	Request(ctx context.Context, topic string, msg Message, timeout time.Duration) (Message, error)
 
+	// RetainLast stores the last message for a topic so new subscribers
+	// receive it immediately upon Subscribe. Similar to MQTT retained
+	// messages. Only the most recent message per topic is retained.
+	// Passing a nil Message clears the retained message.
+	RetainLast(topic string, msg *Message)
+
 	// Close shuts down the bus, unsubscribes all handlers,
 	// and releases resources.
 	Close() error
