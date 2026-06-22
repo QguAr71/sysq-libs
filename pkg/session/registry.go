@@ -32,6 +32,7 @@ type Registry struct {
 	mu        sync.Mutex
 	state     LifecycleState
 	info      *SessionInfo
+	wing      string // FIX-20260622-14: sandbox wing override (from LAZARUS_WING)
 	observers []LifecycleObserver
 	handlers  []EventHandler
 	journal          *Journal
@@ -200,6 +201,21 @@ func (r *Registry) StoreReportedExitCode(code int) {
 // Thread-safe (atomic). Called by the observer callback to check for authoritative code.
 func (r *Registry) GetReportedExitCode() int {
 	return int(r.reportedExitCode.Load())
+}
+
+// SetWing stores a wing override label for this session (FIX-20260622-14).
+// Thread-safe. Used by LAZARUS_WING env → agent → start_by_fd param → registry.
+func (r *Registry) SetWing(w string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.wing = w
+}
+
+// Wing returns the wing override label for this session, or "" if not set.
+func (r *Registry) Wing() string {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.wing
 }
 
 // Stop terminates all observers (called during daemon shutdown).
