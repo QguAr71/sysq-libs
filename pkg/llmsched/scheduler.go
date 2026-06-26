@@ -451,14 +451,12 @@ func (c *Client) doGenerate(ctx context.Context, prompt string) (string, error) 
 		Model  string `json:"model"`
 		Prompt string `json:"prompt"`
 		Stream bool   `json:"stream"`
-		Raw    bool   `json:"raw"`
 	}
 
 	body := ollamaRequest{
 		Model:  c.model,
 		Prompt: prompt,
 		Stream: false,
-		Raw:    true,
 	}
 
 	var lastErr error
