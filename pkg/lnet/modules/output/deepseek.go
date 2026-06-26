@@ -23,12 +23,13 @@ const deepseekTarget = "https://api.deepseek.com"
 
 // DeepSeek — backend dla api.deepseek.com.
 type DeepSeek struct {
-	apiKey string
-	client *http.Client
+	apiKey            string
+	client            *http.Client
+	thinkingDisabled  bool // inject thinking:{type:"disabled"} gdy true
 }
 
 // NewDeepSeek tworzy backend DeepSeek.
-// apiKey — DEEPSEEK_API_KEY
+// thinking disabled — NIE wstrzykuje (V4 z reasoningiem).
 func NewDeepSeek(apiKey string) *DeepSeek {
 	return &DeepSeek{
 		apiKey: apiKey,
@@ -41,16 +42,30 @@ func NewDeepSeek(apiKey string) *DeepSeek {
 	}
 }
 
+// NewDeepSeekWithThinkingDisabled tworzy backend DeepSeek z thinking:disabled.
+// Używane przez eho1 (sandbox) — niższy koszt, bez reasoning_content.
+func NewDeepSeekWithThinkingDisabled(apiKey string) *DeepSeek {
+	d := NewDeepSeek(apiKey)
+	d.thinkingDisabled = true
+	return d
+}
+
 // Name zwraca nazwę backendu.
 func (d *DeepSeek) Name() string { return "deepseek" }
 
 // Forward forwarduje request do api.deepseek.com.
-// Dodaje thinking: {type: "disabled"}.
+// Jeśli thinkingDisabled=true — dodaje thinking:{type:"disabled"} do JSON body.
+// Jeśli thinkingDisabled=false — nie modyfikuje body (V4 z reasoningiem).
 func (d *DeepSeek) Forward(ctx context.Context, req *core.Request) (*core.Response, error) {
+	body := req.Body
+	if d.thinkingDisabled && body != nil && len(body) > 0 {
+		body = injectThinkingDisabled(body)
+	}
+
 	// Build upstream request
 	upstreamURL := deepseekTarget + req.Path
 
-	httpReq, err := http.NewRequestWithContext(ctx, req.Method, upstreamURL, bytes.NewReader(req.Body))
+	httpReq, err := http.NewRequestWithContext(ctx, req.Method, upstreamURL, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("deepseek: %w", err)
 	}
@@ -73,6 +88,31 @@ func (d *DeepSeek) Forward(ctx context.Context, req *core.Request) (*core.Respon
 		Header:     resp.Header,
 		Body:       resp.Body,
 	}, nil
+}
+
+// injectThinkingDisabled wstrzykuje thinking:{type:"disabled"} do JSON body.
+// DeepSeek API v4 wymaga jawnego wyłączenia thinking.
+func injectThinkingDisabled(body []byte) []byte {
+	// jeśli body jest puste lub {"messages":[...]} — inject przed messages
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(body, &raw); err != nil {
+		return body // nie psuj jeśli nie JSON
+	}
+	if _, exists := raw["thinking"]; exists {
+		return body // już jest
+	}
+	// Usuń messages, dodaj thinking, przywróć messages
+	messagesJSON := raw["messages"]
+	delete(raw, "messages")
+	raw["thinking"] = json.RawMessage(`{"type":"disabled"}`)
+	if messagesJSON != nil {
+		raw["messages"] = messagesJSON
+	}
+	out, err := json.Marshal(raw)
+	if err != nil {
+		return body
+	}
+	return out
 }
 
 // Extract implementuje UsageExtractor — parsuje usage z formatu DeepSeek.

@@ -4,6 +4,7 @@ package lifecycle
 
 import (
 	"context"
+	"sync"
 	"time"
 )
 
@@ -43,7 +44,9 @@ type Unit interface {
 }
 
 // UnitWithStatus is a helper for implementing Status() and SetStatus().
+// Thread-safe: uses RWMutex to protect concurrent read/write from watchdog + shutdown.
 type UnitWithStatus struct {
+	mu     sync.RWMutex
 	status UnitStatus
 }
 
@@ -54,10 +57,14 @@ func NewUnitWithStatus() *UnitWithStatus {
 
 // Status returns the current status.
 func (u *UnitWithStatus) Status() UnitStatus {
+	u.mu.RLock()
+	defer u.mu.RUnlock()
 	return u.status
 }
 
 // SetStatus updates the unit status.
 func (u *UnitWithStatus) SetStatus(s UnitStatus) {
+	u.mu.Lock()
+	defer u.mu.Unlock()
 	u.status = s
 }
