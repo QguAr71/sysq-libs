@@ -16,6 +16,7 @@ Jeśli nie ma, a komponent jest generyczny — zaimplementuj tutaj i zaimportuj.
 | `modes/` | Maszyna stanów trybów operacyjnych (8 trybów, 184 LOC) | Lazarus |
 | `types/` | Typy epistemiczne (Origin, Epistemic) | Lazarus (citadel) |
 | `vault/` | ChaCha20-Poly1305 AEAD + honeypoty + mirror (304 LOC) | Lazarus |
+| `portfixer/` | Port conflict resolver z graceful degradation (273 LOC) — env → default → scan → fallback | Lazarus (initMCPServer) |
 | `session/` | Lifecycle FSM + append-only journal + registry (470 LOC) | Lazarus (kernel_deploy) |
 | `desiredstate/` | Desired State engine + observer + reconciler (595 LOC) | Lazarus (kernel_deploy) |
 
