@@ -1,6 +1,8 @@
 package modes
 
 import (
+	"context"
+	"encoding/json"
 	"testing"
 	"time"
 )
@@ -169,4 +171,72 @@ func walkTo(m *Manager, target Mode, t *testing.T) {
 		t.Fatalf("walkTo: failed to reach %s (at %s)", target, m.Current())
 	}
 	time.Sleep(1 * time.Millisecond) // ensure timestamps differ
+}
+
+// ────────────────────────────────────────────────────────────
+// Mode transition event bus (Blueprint v1.0, 2026-06-27)
+// ────────────────────────────────────────────────────────────
+
+func TestTransitionPublishesEvent(t *testing.T) {
+	m := NewManager()
+	bus := make(chan TransitionEvent, 10)
+
+	m.SetBus(&testEventBus{ch: bus})
+
+	if err := m.Transition(Guarded, "test-init"); err != nil {
+		t.Fatalf("init→guarded: %v", err)
+	}
+
+	select {
+	case ev := <-bus:
+		if ev.From != Init || ev.To != Guarded {
+			t.Errorf("expected Init→Guarded, got %s→%s", ev.From, ev.To)
+		}
+		if ev.Reason != "test-init" {
+			t.Errorf("expected reason 'test-init', got %q", ev.Reason)
+		}
+		if ev.Timestamp.IsZero() {
+			t.Error("timestamp should not be zero")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("expected mode.transition event, got none after 1s")
+	}
+}
+
+func TestTransitionInvalidDoesNotPublish(t *testing.T) {
+	m := NewManager()
+	bus := make(chan TransitionEvent, 10)
+	m.SetBus(&testEventBus{ch: bus})
+
+	// Init→Active invalid — should NOT publish
+	_ = m.Transition(Active, "invalid")
+
+	select {
+	case ev := <-bus:
+		t.Errorf("invalid transition published event: %s→%s", ev.From, ev.To)
+	case <-time.After(100 * time.Millisecond):
+		// expected — no event
+	}
+}
+
+func TestSetBusNilSafe(t *testing.T) {
+	m := NewManager()
+	m.SetBus(nil)
+	if err := m.Transition(Guarded, "nil-bus"); err != nil {
+		t.Fatalf("transition with nil bus: %v", err)
+	}
+}
+
+// testEventBus implements modes.Bus using a channel.
+type testEventBus struct {
+	ch chan TransitionEvent
+}
+
+func (b *testEventBus) Publish(_ context.Context, _ string, msg Message) error {
+	var ev TransitionEvent
+	if err := json.Unmarshal(msg.Payload, &ev); err != nil {
+		return err
+	}
+	b.ch <- ev
+	return nil
 }

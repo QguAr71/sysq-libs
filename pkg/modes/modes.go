@@ -26,10 +26,30 @@
 package modes
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
 )
+
+// Message is a generic bus message (avoid circular dependency on bus package).
+type Message struct {
+	Payload []byte
+}
+
+// Bus is a minimal event bus interface. Mode Manager only needs Publish.
+type Bus interface {
+	Publish(ctx context.Context, topic string, msg Message) error
+}
+
+// TransitionEvent is published on mode.transition after every successful transition.
+type TransitionEvent struct {
+	From      Mode      `json:"from"`
+	To        Mode      `json:"to"`
+	Reason    string    `json:"reason"`
+	Timestamp time.Time `json:"timestamp"`
+}
 
 // Mode represents an operational state.
 type Mode string
@@ -58,6 +78,7 @@ type State struct {
 type Manager struct {
 	mu    sync.RWMutex
 	state State
+	bus   Bus // optional: set via SetBus for publishing mode.transition events
 }
 
 // NewManager creates a mode manager in INIT state.
@@ -68,6 +89,14 @@ func NewManager() *Manager {
 			Since: time.Now().UTC(),
 		},
 	}
+}
+
+// SetBus injects an event bus for publishing mode transitions.
+// If nil, events are not published (backward compatible).
+func (m *Manager) SetBus(b Bus) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.bus = b
 }
 
 // State returns a copy of the current mode state.
@@ -102,6 +131,21 @@ func (m *Manager) Transition(target Mode, reason string) error {
 		PrevMode:  prev.Mode,
 		PrevSince: prev.Since,
 	}
+
+	// Publish mode.transition event if bus is configured
+	if m.bus != nil {
+		ev := TransitionEvent{
+			From:      prev.Mode,
+			To:        target,
+			Reason:    reason,
+			Timestamp: m.state.Since,
+		}
+		data, err := json.Marshal(ev)
+		if err == nil {
+			_ = m.bus.Publish(context.Background(), "mode.transition", Message{Payload: data})
+		}
+	}
+
 	return nil
 }
 
