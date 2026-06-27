@@ -70,7 +70,10 @@ func TestVault_DecryptPlaintextPassthrough(t *testing.T) {
 }
 
 func TestVault_NoKey_EncryptFails(t *testing.T) {
-	cfg := &Config{Encrypted: []EncryptedRoom{{Room: VaultRoom}}}
+	cfg := &Config{
+		Encrypted:     []EncryptedRoom{{Room: VaultRoom}},
+		MasterKeyPath: "/nonexistent/path/to/master.key", // force missing key
+	}
 	vm, _ := NewManager(cfg)
 	if vm.Loaded() {
 		t.Fatal("should not be loaded without key")
