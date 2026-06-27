@@ -7,7 +7,7 @@ Go module: `github.com/QguAr71/sysq-libs`
 
 ---
 
-## Biblioteki (15)
+## Biblioteki (16)
 
 | Pakiet | Opis | LOC | Status |
 |--------|------|-----|--------|
@@ -15,6 +15,7 @@ Go module: `github.com/QguAr71/sysq-libs`
 | `bus/` | EventBus — pub/sub, InMemoryBus | 250 | WDROŻONY |
 | `cerber/` | Gate dostępowy dla agentów | 67 | WDROŻONY |
 | `desiredstate/` | Desired state engine + Reconciler | 595 | WDROŻONY |
+| `embbridge/` | Semantic re-ranking bridge (cosine similarity) | 398 | WDROŻONY |
 | `epistemic/` | EntryID, EventID — deterministyczne hashe | 44 | WDROŻONY |
 | `gitvault/` | Git layer nad Citadel — snapshot/restore/sync | 460 | WDROŻONY |
 | `lifecycle/` | Unit, Kernel, HealthReport | 63 | WDROŻONY |
@@ -27,7 +28,7 @@ Go module: `github.com/QguAr71/sysq-libs`
 | `types/` | Typy epistemiczne | 44 | WDROŻONY |
 | `vault/` | ChaCha20-Poly1305 AEAD + honeypots | 304 | WDROŻONY |
 
-**Razem:** ~5684 LOC, 43+ testy zielone
+**Razem:** ~6082 LOC, 54+ testy zielone
 
 ---
 
