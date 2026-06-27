@@ -7,22 +7,27 @@ Go module: `github.com/QguAr71/sysq-libs`
 
 ---
 
-## Biblioteki (10)
+## Biblioteki (15)
 
 | Pakiet | Opis | LOC | Status |
 |--------|------|-----|--------|
+| `acl/` | Capability engine, JWT tokeny, konta | 1923 | WDROŻONY |
 | `bus/` | EventBus — pub/sub, InMemoryBus | 250 | WDROŻONY |
 | `cerber/` | Gate dostępowy dla agentów | 67 | WDROŻONY |
 | `desiredstate/` | Desired state engine + Reconciler | 595 | WDROŻONY |
 | `epistemic/` | EntryID, EventID — deterministyczne hashe | 44 | WDROŻONY |
+| `gitvault/` | Git layer nad Citadel — snapshot/restore/sync | 460 | WDROŻONY |
 | `lifecycle/` | Unit, Kernel, HealthReport | 63 | WDROŻONY |
+| `llmsched/` | GPU cooperative scheduler (HIGH/LOW) | 270 | WDROŻONY |
+| `lnet/` | LLM proxy server (DeepSeek/OpenAI) | 380 | WDROŻONY |
 | `modes/` | Operacyjny FSM (8 trybów) | 184 | WDROŻONY |
+| `portfixer/` | TCP port resolver + graceful degradation | 273 | WDROŻONY |
 | `psl/` | Personalized Search Layer (Anubis) | 337 | WDROŻONY |
 | `session/` | Lifecycle FSM, Journal, Registry | 470 | WDROŻONY |
 | `types/` | Typy epistemiczne | 44 | WDROŻONY |
 | `vault/` | ChaCha20-Poly1305 AEAD + honeypots | 304 | WDROŻONY |
 
-**Razem:** ~2350 LOC, 23 testy zielone
+**Razem:** ~5684 LOC, 43+ testy zielone
 
 ---
 
@@ -30,7 +35,7 @@ Go module: `github.com/QguAr71/sysq-libs`
 
 | Projekt | Importy |
 |---------|---------|
-| Lazarus | `sysq-libs/pkg/modes`, `sysq-libs/pkg/bus` |
+| Lazarus | `sysq-libs/pkg/acl`, `sysq-libs/pkg/modes`, `sysq-libs/pkg/bus`, `sysq-libs/pkg/llmsched`, `sysq-libs/pkg/portfixer`, `sysq-libs/pkg/lnet` |
 | Supervisor | `sysq-libs/pkg/bus`, `sysq-libs/pkg/lifecycle`, `sysq-libs/pkg/modes`, `sysq-libs/pkg/cerber` |
 
 ---
