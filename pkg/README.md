@@ -1,38 +1,28 @@
-# sysq-libs/pkg/ — Współdzielone biblioteki SysQ
+# portfixer — TCP Port Conflict Resolution
 
-Każdy katalog to niezależna biblioteka Go importowana jako `github.com/QguAr71/sysq-libs/pkg/<nazwa>`.
+**License:** MIT
+**Import:** `github.com/QguAr71/sysq-libs/pkg/portfixer`
 
-Zasada: przed implementacją nowego komponentu w Lazarusie/Supervisorze/Naradzie — sprawdź czy nie ma go tutaj.
-Jeśli nie ma, a komponent jest generyczny — zaimplementuj tutaj i zaimportuj.
+Resolves TCP port conflicts with graceful degradation.
 
-## Katalogi
+```
+Resolve():
+  1. env override → use it
+  2. defaultPort free → use it
+  3. scan [rangeStart, rangeEnd] → first free
+  4. nothing free → defaultPort + 100 (graceful degradation)
+```
 
-| Biblioteka | Opis | Używana przez |
-|-----------|------|---------------|
-| `lifecycle/` | Unit, UnitWithStatus, HealthReport — bazowe interfejsy systemu unitów | Lazarus (kernel) |
-| `cerber/` | CerberGate — walidacja dostępu | Lazarus |
-| `epistemic/` | EntryID, EventID — identyfikatory epistemiczne | Lazarus (citadel) |
-| `psl/` | Personalized Search Layer — re-ranking wyników FTS5 | Lazarus (embbridge) |
-| `modes/` | Maszyna stanów trybów operacyjnych (8 trybów, 184 LOC) | Lazarus |
-| `types/` | Typy epistemiczne (Origin, Epistemic) | Lazarus (citadel) |
-| `vault/` | ChaCha20-Poly1305 AEAD + honeypoty + mirror (304 LOC) | Lazarus |
-| `portfixer/` | Port conflict resolver z graceful degradation (273 LOC) — env → default → scan → fallback | Lazarus (initMCPServer) |
-| `session/` | Lifecycle FSM + append-only journal + registry (470 LOC) | Lazarus (kernel_deploy) |
-| `desiredstate/` | Desired State engine + observer + reconciler (595 LOC) | Lazarus (kernel_deploy) |
+## Usage
 
-## Invarianty
+```go
+pf := portfixer.New(portfixer.Config{
+    DefaultPort: 9595,
+    RangeStart:  9595,
+    RangeEnd:    9605,
+    Bus:         bus, // optional, may be nil
+})
+port := pf.Resolve()
+```
 
-Zgodnie z konstytucją (`CONSTITUTION.md #I-20, #I-21`):
-
-- **Przed reinwencją** — sprawdź czy funkcjonalność już istnieje w `pkg/`
-- **Propagacja** — gdy projekt rozwija generyczny komponent → ekstrakcja do `pkg/`
-- **Żywe biblioteki** — rozwijane razem z projektami, nie zamrożone
-
-## Dodawanie nowej biblioteki
-
-1. `mkdir pkg/<nazwa>`
-2. Plik `<nazwa>.go` + `<nazwa>_test.go`
-3. Zero zależności od Lazarusa — tylko stdlib + zewnętrzne moduły
-4. Interfejs jawny, invarianty w komentarzu
-5. Dokumentacja DEV + USER w `lazarus/docs/DEV/<nazwa>.md` i `lazarus/docs/USER/<nazwa>.md`
-6. Aktualizuj ten README
+See `portfixer/portfixer.go` for full docs.
