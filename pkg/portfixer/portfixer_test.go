@@ -157,3 +157,67 @@ func TestDefaultConfig(t *testing.T) {
 		t.Errorf("env var: %s", cfg.EnvVar)
 	}
 }
+
+func TestWritePortFile(t *testing.T) {
+	pf := New(Config{DefaultPort: 9595})
+	pf.WritePortFile()
+
+	home, _ := os.UserHomeDir()
+	path := home + "/.cache/lazarus/mcp_port"
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("port file not written: %v", err)
+	}
+
+	// Verify content is a positive integer ending with newline
+	content := string(data)
+	if len(content) == 0 {
+		t.Error("port file empty")
+	}
+	port := 0
+	for _, c := range content {
+		if c == '\n' {
+			break
+		}
+		if c >= '0' && c <= '9' {
+			port = port*10 + int(c-'0')
+		}
+	}
+	if port <= 0 {
+		t.Errorf("invalid port in file: %s", content)
+	}
+}
+
+func TestWritePortFileCreatesDir(t *testing.T) {
+	home, _ := os.UserHomeDir()
+	path := home + "/.cache/lazarus/mcp_port"
+
+	// Clean up first
+	os.Remove(path)
+
+	pf := New(Config{DefaultPort: 9595})
+	pf.WritePortFile()
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		t.Error("port file not created")
+	}
+}
+
+func TestWritePortFileIdempotent(t *testing.T) {
+	pf := New(Config{DefaultPort: 9595})
+
+	// First write
+	pf.WritePortFile()
+	home, _ := os.UserHomeDir()
+	path := home + "/.cache/lazarus/mcp_port"
+	data1, _ := os.ReadFile(path)
+
+	// Second write — port cached, same result
+	pf.WritePortFile()
+	data2, _ := os.ReadFile(path)
+
+	if string(data1) != string(data2) {
+		t.Error("port file changed between writes")
+	}
+}

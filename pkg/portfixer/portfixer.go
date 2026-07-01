@@ -258,6 +258,47 @@ func (pf *PortFixer) ClearCache() {
 }
 
 // ────────────────────────────────────────────────────────────
+// Port file — consumer-side discovery
+// ────────────────────────────────────────────────────────────
+
+// PortFilePath is the standard location for the port file.
+// Consumers (goose, CLI tools) read this to discover current MCP port.
+const PortFilePath = "~/.cache/lazarus/mcp_port"
+
+// WritePortFile writes the resolved port to PortFilePath.
+// Creates parent directory if needed. Fails silently — port file is
+// a convenience, not required for system operation (I-18).
+//
+// Called after every successful port resolution.
+// Consumers: goose config, lazarus-cli, shell wrappers.
+func (pf *PortFixer) WritePortFile() {
+	port := pf.Resolve()
+	if port <= 0 {
+		return
+	}
+
+	// Expand ~ to home directory
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+	path := home + "/.cache/lazarus/mcp_port"
+
+	// Ensure parent directory exists
+	if err := os.MkdirAll(home+"/.cache/lazarus", 0755); err != nil {
+		return
+	}
+
+	// Atomic write: temp file → rename
+	tmpPath := path + ".tmp"
+	content := fmt.Sprintf("%d\n", port)
+	if err := os.WriteFile(tmpPath, []byte(content), 0644); err != nil {
+		return
+	}
+	os.Rename(tmpPath, path)
+}
+
+// ────────────────────────────────────────────────────────────
 // Bus publish (nil-safe)
 // ────────────────────────────────────────────────────────────
 
